@@ -25,17 +25,6 @@ CSVMLin::CSVMLin()
 	init();
 }
 
-CSVMLin::CSVMLin(
-	float64_t C, CDotFeatures* traindat, CLabels* trainlab)
-: CLinearMachine(), C1(C), C2(C), epsilon(1e-5), use_bias(true)
-{
-	set_features(traindat);
-	set_labels(trainlab);
-
-	init();
-}
-
-
 CSVMLin::~CSVMLin()
 {
 }
@@ -51,22 +40,13 @@ void CSVMLin::init()
 	SG_ADD(&epsilon, "epsilon", "Convergence precision.");
 }
 
-bool CSVMLin::train_machine(CFeatures* data)
+void CSVMLin::train_machine(CFeatures* features, CLabels* labels)
 {
-	ASSERT(m_labels)
-
-	if (data)
-	{
-		if (!data->has_property(FP_DOT))
-			SG_ERROR("Specified features are not of type CDotFeatures\n")
-		set_features((CDotFeatures*) data);
-	}
-
 	ASSERT(features)
 
-	SGVector<float64_t> train_labels=((CBinaryLabels*) m_labels)->get_labels();
-	int32_t num_feat=features->get_dim_feature_space();
-	int32_t num_vec=features->get_num_vectors();
+	SGVector<float64_t> train_labels = binary_labels(labels)->get_labels();
+	int32_t num_feat = features->as<CDotFeatures>()->get_dim_feature_space();
+	int32_t num_vec = features->get_num_vectors();
 
 	ASSERT(num_vec==train_labels.vlen)
 
@@ -81,7 +61,7 @@ bool CSVMLin::train_machine(CFeatures* data)
 	Data.n=num_feat+1;
 	Data.nz=num_feat+1;
 	Data.Y=train_labels.vector;
-	Data.features=features;
+	Data.features = features->as<CDotFeatures>();
 	Data.C = SG_MALLOC(float64_t, Data.l);
 
 	Options.algo = SVM;
@@ -119,5 +99,4 @@ bool CSVMLin::train_machine(CFeatures* data)
 
 	SG_FREE(Data.C);
 	SG_FREE(Outputs.vec);
-	return true;
 }

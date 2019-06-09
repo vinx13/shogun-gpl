@@ -29,15 +29,6 @@ class CSVMLin : public CLinearMachine
 		/** default constructor */
 		CSVMLin();
 
-		/** constructor
-		 *
-		 * @param C constant C
-		 * @param traindat training features
-		 * @param trainlab labels for features
-		 */
-		CSVMLin(
-			float64_t C, CDotFeatures* traindat,
-			CLabels* trainlab);
 		virtual ~CSVMLin();
 
 		/** set C
@@ -93,10 +84,9 @@ class CSVMLin : public CLinearMachine
 		 * @param data training data (parameter can be avoided if distance or
 		 * kernel-based classifiers are used and distance/kernels are
 		 * initialized with train data)
-		 *
-		 * @return whether training was successful
+		 * @param labels training labels
 		 */
-		virtual bool train_machine(CFeatures* data=NULL);
+		virtual void train_machine(CFeatures* features, CLabels* labels);
 
 		/** set up parameters */
 		void init();

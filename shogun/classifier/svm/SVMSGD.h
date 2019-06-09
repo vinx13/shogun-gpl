@@ -138,13 +138,12 @@ class CSVMSGD : public CLinearMachine
 
 		/** train classifier
 		 *
-		 * @param data training data (parameter can be avoided if distance or
+		 * @param features training data (parameter can be avoided if distance or
 		 * kernel-based classifiers are used and distance/kernels are
 		 * initialized with train data)
-		 *
-		 * @return whether training was successful
+		 * @param labels training labels
 		 */
-		virtual bool train_machine(CFeatures* data=NULL);
+		virtual void train_machine(CFeatures* features, CLabels* labels);
 
 	private:
 		void init();

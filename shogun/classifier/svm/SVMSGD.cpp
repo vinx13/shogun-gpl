@@ -68,18 +68,10 @@ void CSVMSGD::set_loss_function(CLossFunction* loss_func)
 	loss=loss_func;
 }
 
-bool CSVMSGD::train_machine(CFeatures* data)
+void CSVMSGD::train_machine(CFeatures* features, CLabels* labels)
 {
 	// allocate memory for w and initialize everyting w and bias with 0
-	auto labels = binary_labels(m_labels);
-
-	if (data)
-	{
-		if (!data->has_property(FP_DOT))
-			SG_ERROR("Specified features are not of type CDotFeatures\n")
-		set_features((CDotFeatures*) data);
-	}
-
+	auto bin_labels = binary_labels(m_labels);
 	ASSERT(features)
 
 	int32_t num_train_labels = labels->get_num_labels();
@@ -88,7 +80,8 @@ bool CSVMSGD::train_machine(CFeatures* data)
 	ASSERT(num_vec==num_train_labels)
 	ASSERT(num_vec>0)
 
-	SGVector<float64_t> w(features->get_dim_feature_space());
+	SGVector<float64_t> w(
+	    features->as<CDotFeatures>()->get_dim_feature_space());
 	w.zero();
 	bias=0;
 
@@ -121,13 +114,17 @@ bool CSVMSGD::train_machine(CFeatures* data)
 		for (int32_t i=0; i<num_vec; i++)
 		{
 			float64_t eta = 1.0 / (lambda * t);
-			float64_t y = labels->get_label(i);
-			float64_t z = y * (features->dense_dot(i, w.vector, w.vlen) + bias);
+			float64_t y = bin_labels->get_label(i);
+			float64_t z =
+			    y *
+			    (features->as<CDotFeatures>()->dense_dot(i, w.vector, w.vlen) +
+			     bias);
 
 			if (z < 1 || is_log_loss)
 			{
-				float64_t etd = -eta * loss->first_derivative(z,1);
-				features->add_to_dense_vec(etd * y / wscale, i, w.vector, w.vlen);
+				float64_t etd = -eta * loss->first_derivative(z, 1);
+				features->as<CDotFeatures>()->add_to_dense_vec(
+				    etd * y / wscale, i, w.vector, w.vlen);
 
 				if (use_bias)
 				{
@@ -153,8 +150,6 @@ bool CSVMSGD::train_machine(CFeatures* data)
 	SG_INFO("Norm: %.6f, Bias: %.6f\n", wnorm, bias)
 
 	set_w(w);
-
-	return true;
 }
 
 void CSVMSGD::calibrate()
